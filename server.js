@@ -58,7 +58,7 @@ app.post("/api/help", function(req, res) {
             if (doc === null) {
                 doc = {};
             }
-            res.status(200).json(doc);
+            res.status(200).json({success: true, message: "Help record registered successfully"});
         }
     });
 });
