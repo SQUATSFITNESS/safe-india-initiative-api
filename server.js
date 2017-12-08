@@ -39,6 +39,10 @@ function handleError(res, reason, message, code) {
     res.status(code || 500).json({"error": message});
 }
 
+app.get("/", function(req, res) {
+    res.status(200).send('Welcoem to API endpoint of Safe India Initiative');
+});
+
 /*  "/api/help"
  *    POST: create a record that the user needs help
  */
