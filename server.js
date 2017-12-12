@@ -2,9 +2,10 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var mongodb = require("mongodb");
 var ObjectId = mongodb.ObjectId;
-var cors = require('cors');
+var cors = require("cors");
 
-var HELP_NEEDED_COLLECTION = 'helpNeeded';
+var HELP_NEEDED_COLLECTION = "helpNeeded";
+var USER_LOCATIONS_COLLECTION = "userLocations";
 
 var app = express();
 app.use(cors());
@@ -15,50 +16,82 @@ var db;
 
 // Connect to the database before starting the application server.
 mongodb.MongoClient.connect(process.env.MONGODB_URI, function(err, database) {
-    if (err) {
-        console.log(err);
-        process.exit(1);
-    }
+  if (err) {
+    console.log(err);
+    process.exit(1);
+  }
 
-    // Save database object from the callback for reuse.
-    db = database;
-    console.log("Database connection ready");
+  // Save database object from the callback for reuse.
+  db = database;
+  console.log("Database connection ready");
 
-    // Initialize the app.
-    var server = app.listen(process.env.PORT || 8080, function() {
-        var port = server.address().port;
-        console.log("App now running on port", port);
-    });
+  // Initialize the app.
+  var server = app.listen(process.env.PORT || 8080, function() {
+    var port = server.address().port;
+    console.log("App now running on port", port);
+  });
 });
 
 // SII API ROUTES BELOW
 
 // Generic error handler used by all endpoints.
 function handleError(res, reason, message, code) {
-    console.log("ERROR: " + reason);
-    res.status(code || 500).json({"error": message});
+  console.log("ERROR: " + reason);
+  res.status(code || 500).json({ error: message });
 }
 
 app.get("/", function(req, res) {
-    res.status(200).send('Welcoem to API endpoint of Safe India Initiative');
+  res.status(200).send("Welcoem to API endpoint of Safe India Initiative");
 });
 
 /*  "/api/help"
  *    POST: create a record that the user needs help
  */
 app.post("/api/help", function(req, res) {
-    var userDetails = req.body.userDetails;
-    console.log(userDetails.username + ' needs help');
-    userDetails.datetime = new Date();
+  var userDetails = req.body.userDetails;
+  console.log(userDetails.username + " needs help");
+  userDetails.datetime = new Date();
 
-    db.collection(HELP_NEEDED_COLLECTION).insert(userDetails, function(err, doc) {
-        if (err) {
-            handleError(res, err.message, "Failed to add user details");
-        } else {
-            if (doc === null) {
-                doc = {};
-            }
-            res.status(200).json({success: true, message: "Help record registered successfully"});
-        }
+  db.collection(HELP_NEEDED_COLLECTION).insert(userDetails, function(err, doc) {
+    if (err) {
+      handleError(res, err.message, "Failed to add user details");
+    } else {
+      if (doc === null) {
+        doc = {};
+      }
+
+      db
+        .collection(USER_LOCATIONS_COLLECTION)
+        .find()
+        .toArray(function(err, users) {
+          if (err) {
+            handleError(res, err.message, "Failed to get help data");
+          } else {
+            res
+              .status(200)
+              .json({
+                success: true,
+                message: "Help record registered successfully",
+                nearbyUsers: users
+              });
+          }
+        });
+    }
+  });
+});
+
+/*  "/api/help"
+ *    GET: get records of all users asking for help
+ */
+app.get("/api/help", function(req, res) {
+  db
+    .collection(HELP_NEEDED_COLLECTION)
+    .find()
+    .toArray(function(err, doc) {
+      if (err) {
+        handleError(res, err.message, "Failed to get help data");
+      } else {
+        res.status(200).json(doc);
+      }
     });
 });
