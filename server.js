@@ -52,9 +52,19 @@ app.post("/api/help", function(req, res) {
   console.log(userDetails.username + " needs help");
   userDetails.datetime = new Date();
 
+  if (userDetails.userId === undefined) {
+    handleError(
+      res,
+      "User id unavailable",
+      "Please provide userDetails.userId"
+    );
+    return;
+  }
+
   db.collection(HELP_NEEDED_COLLECTION).insert(userDetails, function(err, doc) {
     if (err) {
       handleError(res, err.message, "Failed to add user details");
+      return;
     } else {
       if (doc === null) {
         doc = {};
@@ -66,14 +76,13 @@ app.post("/api/help", function(req, res) {
         .toArray(function(err, users) {
           if (err) {
             handleError(res, err.message, "Failed to get help data");
+            return;
           } else {
-            res
-              .status(200)
-              .json({
-                success: true,
-                message: "Help record registered successfully",
-                nearbyUsers: users
-              });
+            res.status(200).json({
+              success: true,
+              message: "Help record registered successfully",
+              nearbyUsers: users
+            });
           }
         });
     }
@@ -84,14 +93,96 @@ app.post("/api/help", function(req, res) {
  *    GET: get records of all users asking for help
  */
 app.get("/api/help", function(req, res) {
+  console.log("Returning all help records");
+
   db
     .collection(HELP_NEEDED_COLLECTION)
     .find()
-    .toArray(function(err, doc) {
+    .toArray(function(err, helpDocs) {
       if (err) {
         handleError(res, err.message, "Failed to get help data");
+        return;
       } else {
-        res.status(200).json(doc);
+        res.status(200).json(helpDocs);
+      }
+    });
+});
+
+/*  "/api/user-location"
+ *    POST: create a record to store user current location
+ */
+app.post("/api/user-location", function(req, res) {
+  var userDetails = req.body.userDetails;
+  console.log(userDetails.username + " wants to update location");
+  userDetails.datetime = new Date();
+  if (userDetails.userId === undefined) {
+    handleError(
+      res,
+      "User id unavailable",
+      "Please provide userDetails.userId"
+    );
+    return;
+  } else if (userDetails.lat === undefined || userDetails.long === undefined) {
+    handleError(
+      res,
+      "User location unavailable",
+      "Please provide userDetails.lat and userDetails.long"
+    );
+    return;
+  }
+
+  db
+    .collection(USER_LOCATIONS_COLLECTION)
+    .remove({ userId: userDetails.userId }, function(err, numberOfRemovedDocs) {
+      if (err) {
+        handleError(
+          res,
+          err.message,
+          "Failed to remove previous user location"
+        );
+        return;
+      } else {
+        db
+          .collection(USER_LOCATIONS_COLLECTION)
+          .insert(userDetails, function(err, userLocation) {
+            if (err) {
+              handleError(res, err.message, "Failed to add user location");
+              return;
+            } else {
+              res.status(200).json({
+                success: true,
+                message: "Updated user location"
+              });
+            }
+          });
+      }
+    });
+});
+
+/*  "/api/user-location"
+   *    GET: get current location of user
+   */
+app.get("/api/user-location", function(req, res) {
+  var userId = req.query.userId;
+  if (userId === undefined) {
+    handleError(
+      res,
+      "User id unavailable",
+      "Please provide userId"
+    );
+    return;
+  } 
+
+  console.log("Returning current location of user with id: " + userId);
+
+  db
+    .collection(USER_LOCATIONS_COLLECTION)
+    .findOne({ userId: Number(userId) }, function(err, userLocation) {
+      if (err) {
+        handleError(res, err.message, "Failed to get current user location");
+        return;
+      } else {
+        res.status(200).json(userLocation);
       }
     });
 });
