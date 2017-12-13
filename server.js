@@ -165,13 +165,18 @@ app.post("/api/user-location", function(req, res) {
 app.get("/api/user-location", function(req, res) {
   var userId = req.query.userId;
   if (userId === undefined) {
-    handleError(
-      res,
-      "User id unavailable",
-      "Please provide userId"
-    );
+      db
+          .collection(USER_LOCATIONS_COLLECTION)
+          .find().toArray(function(err, userLocations) {
+              if (err) {
+                  handleError(res, err.message, "Failed to get current user location");
+                  return;
+              } else {
+                  res.status(200).json(userLocations);
+              }
+          });
     return;
-  } 
+  }
 
   console.log("Returning current location of user with id: " + userId);
 
