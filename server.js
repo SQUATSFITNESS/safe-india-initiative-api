@@ -182,7 +182,7 @@ app.get("/api/user-location", function(req, res) {
 
   db
     .collection(USER_LOCATIONS_COLLECTION)
-    .findOne({ userId: Number(userId) }, function(err, userLocation) {
+    .findOne({ userId: userId }, function(err, userLocation) {
       if (err) {
         handleError(res, err.message, "Failed to get current user location");
         return;
