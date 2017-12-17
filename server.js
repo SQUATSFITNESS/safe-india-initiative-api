@@ -6,6 +6,7 @@ var cors = require("cors");
 
 var HELP_NEEDED_COLLECTION = "helpNeeded";
 var USER_LOCATIONS_COLLECTION = "userLocations";
+var NEARBY_RANGE_LAT_DIFF = 0.007;
 
 var app = express();
 app.use(cors());
@@ -37,7 +38,7 @@ mongodb.MongoClient.connect(process.env.MONGODB_URI, function(err, database) {
 // Generic error handler used by all endpoints.
 function handleError(res, reason, message, code) {
   console.log("ERROR: " + reason);
-  res.status(code || 500).json({ error: message });
+  res.status(code || 500).json({error: message});
 }
 
 app.get("/", function(req, res) {
@@ -48,8 +49,8 @@ app.get("/", function(req, res) {
  *    POST: create a record that the user needs help
  */
 app.post("/api/help", function(req, res) {
-  var userDetails = req.body.userDetails;
-  console.log(userDetails.username + " needs help");
+  var userDetails = req.body;
+  console.log(userDetails.userId + " needs help");
   userDetails.datetime = new Date();
 
   if (userDetails.userId === undefined) {
@@ -61,27 +62,35 @@ app.post("/api/help", function(req, res) {
     return;
   }
 
-  db.collection(HELP_NEEDED_COLLECTION).insert(userDetails, function(err, doc) {
+  db.collection(HELP_NEEDED_COLLECTION).insert(userDetails, function(err, user) {
     if (err) {
       handleError(res, err.message, "Failed to add user details");
       return;
     } else {
-      if (doc === null) {
-        doc = {};
+      if (user === null) {
+        user = {};
       }
+
+      var lat = user.lat;
+      var long = user.long;
+      var latMin = lat - NEARBY_RANGE_LAT_DIFF;
+      var latMax = lat + NEARBY_RANGE_LAT_DIFF;
+      var longMin = long - NEARBY_RANGE_LAT_DIFF;
+      var longMax = long + NEARBY_RANGE_LAT_DIFF;
 
       db
         .collection(USER_LOCATIONS_COLLECTION)
-        .find()
-        .toArray(function(err, users) {
+        .find({lat : { $gte: latMin, $lte: latMax}, lng: { $gte: longMin, $lte: longMax}})
+        .toArray(function(err, nearbyUsers) {
           if (err) {
             handleError(res, err.message, "Failed to get help data");
             return;
           } else {
+
             res.status(200).json({
               success: true,
               message: "Help record registered successfully",
-              nearbyUsers: users
+              nearbyUsers: nearbyUsers
             });
           }
         });
@@ -113,7 +122,7 @@ app.get("/api/help", function(req, res) {
  */
 app.post("/api/user-location", function(req, res) {
   var userDetails = req.body.userDetails;
-  console.log(userDetails.username + " wants to update location");
+  console.log(userDetails.userId + " wants to update location");
   userDetails.datetime = new Date();
   if (userDetails.userId === undefined) {
     handleError(
@@ -133,7 +142,7 @@ app.post("/api/user-location", function(req, res) {
 
   db
     .collection(USER_LOCATIONS_COLLECTION)
-    .remove({ userId: userDetails.userId }, function(err, numberOfRemovedDocs) {
+    .remove({userId: userDetails.userId}, function(err, numberOfRemovedDocs) {
       if (err) {
         handleError(
           res,
@@ -165,16 +174,16 @@ app.post("/api/user-location", function(req, res) {
 app.get("/api/user-location", function(req, res) {
   var userId = req.query.userId;
   if (userId === undefined) {
-      db
-          .collection(USER_LOCATIONS_COLLECTION)
-          .find().toArray(function(err, userLocations) {
-              if (err) {
-                  handleError(res, err.message, "Failed to get current user location");
-                  return;
-              } else {
-                  res.status(200).json(userLocations);
-              }
-          });
+    db
+      .collection(USER_LOCATIONS_COLLECTION)
+      .find().toArray(function(err, userLocations) {
+      if (err) {
+        handleError(res, err.message, "Failed to get current user location");
+        return;
+      } else {
+        res.status(200).json(userLocations);
+      }
+    });
     return;
   }
 
@@ -182,7 +191,7 @@ app.get("/api/user-location", function(req, res) {
 
   db
     .collection(USER_LOCATIONS_COLLECTION)
-    .findOne({ userId: userId }, function(err, userLocation) {
+    .findOne({userId: userId}, function(err, userLocation) {
       if (err) {
         handleError(res, err.message, "Failed to get current user location");
         return;
