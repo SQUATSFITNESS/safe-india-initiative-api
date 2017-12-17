@@ -71,29 +71,32 @@ app.post("/api/help", function(req, res) {
         user = {};
       }
 
-      var lat = user.lat;
-      var long = user.long;
+      var lat = userDetails.lat;
+      var long = userDetails.long;
       var latMin = lat - NEARBY_RANGE_LAT_DIFF;
       var latMax = lat + NEARBY_RANGE_LAT_DIFF;
       var longMin = long - NEARBY_RANGE_LAT_DIFF;
       var longMax = long + NEARBY_RANGE_LAT_DIFF;
 
+      console.log(latMin, latMax, longMin, longMax)
+
+
       db
         .collection(USER_LOCATIONS_COLLECTION)
-        .find({lat : { $gte: latMin, $lte: latMax}, lng: { $gte: longMin, $lte: longMax}})
-        .toArray(function(err, nearbyUsers) {
-          if (err) {
-            handleError(res, err.message, "Failed to get help data");
-            return;
-          } else {
+        .find({lat: {$gte: latMin, $lte: latMax}, long: {$gte: longMin, $lte: longMax}}).toArray(function(err, nearbyUsers) {
+        if (err) {
+          handleError(res, err.message, "Failed to get current user location");
+          return;
+        } else {
+          res.status(200).json({
+            success: true,
+            message: "Help record registered successfully",
+            nearbyUsers: nearbyUsers
+          });
+        }
+      });
 
-            res.status(200).json({
-              success: true,
-              message: "Help record registered successfully",
-              nearbyUsers: nearbyUsers
-            });
-          }
-        });
+
     }
   });
 });
