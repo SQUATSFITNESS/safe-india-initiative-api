@@ -49,7 +49,7 @@ app.get("/", function(req, res) {
  *    POST: create a record that the user needs help
  */
 app.post("/api/help", function(req, res) {
-  var userDetails = req.body;
+  var userDetails = req.body.userDetails;
   console.log(userDetails.userId + " needs help");
   userDetails.datetime = new Date();
 
