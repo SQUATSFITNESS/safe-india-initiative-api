@@ -104,13 +104,15 @@ app.post("/api/help", function(req, res) {
       var latMax = lat + NEARBY_RANGE_LAT_DIFF;
       var longMin = long - NEARBY_RANGE_LAT_DIFF;
       var longMax = long + NEARBY_RANGE_LAT_DIFF;
+      var fcm = userDetails.fcm;
+
 
       console.log(latMin, latMax, longMin, longMax)
 
 
       db
         .collection(USER_LOCATIONS_COLLECTION)
-        .find({lat: {$gte: latMin, $lte: latMax}, long: {$gte: longMin, $lte: longMax}}).toArray(function(err, nearbyUsers) {
+        .find({lat: {$gte: latMin, $lte: latMax}, long: {$gte: longMin, $lte: longMax}, fcm: {$ne: fcm}}).toArray(function(err, nearbyUsers) {
         if (err) {
           handleError(res, err.message, "Failed to get current user location");
           return;
