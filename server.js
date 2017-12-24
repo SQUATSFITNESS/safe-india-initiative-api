@@ -139,6 +139,7 @@ app.get("/api/help", function(req, res) {
   db
     .collection(HELP_NEEDED_COLLECTION)
     .find()
+    .sort({datetime: -1})
     .toArray(function(err, helpDocs) {
       if (err) {
         handleError(res, err.message, "Failed to get help data");
