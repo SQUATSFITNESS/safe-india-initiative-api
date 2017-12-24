@@ -3,6 +3,7 @@ var bodyParser = require("body-parser");
 var mongodb = require("mongodb");
 var ObjectId = mongodb.ObjectId;
 var cors = require("cors");
+var admin = require("firebase-admin");
 
 var HELP_NEEDED_COLLECTION = "helpNeeded";
 var USER_LOCATIONS_COLLECTION = "userLocations";
@@ -14,6 +15,13 @@ app.use(bodyParser.json());
 
 // Create a database variable outside of the database connection callback to reuse the connection pool in your app.
 var db;
+
+var serviceAccount = require("./fcb-key.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 
 // Connect to the database before starting the application server.
 mongodb.MongoClient.connect(process.env.MONGODB_URI, function(err, database) {
@@ -44,6 +52,25 @@ function handleError(res, reason, message, code) {
 app.get("/", function(req, res) {
   res.status(200).send("Welcoem to API endpoint of Safe India Initiative");
 });
+
+function sendMessageTo(nearbyUsers) {
+  nearbyUsers.forEach(function(user) {
+    console.log("DATA", user);
+    var fcm = user.fcm;
+    if (fcm) {
+      console.log("FCM: " + fcm);
+      admin.messaging().sendToDevice(fcm, { notification: { title: "Help needed", body: "Can you please help?"}})
+        .then(function(response) {
+          // See the MessagingDevicesResponse reference documentation for
+          // the contents of response.
+          console.log("Successfully sent message:", response);
+        })
+        .catch(function(error) {
+          console.log("Error sending message:", error);
+        });
+    }
+  });
+}
 
 /*  "/api/help"
  *    POST: create a record that the user needs help
@@ -88,6 +115,8 @@ app.post("/api/help", function(req, res) {
           handleError(res, err.message, "Failed to get current user location");
           return;
         } else {
+          sendMessageTo(nearbyUsers);
+
           res.status(200).json({
             success: true,
             message: "Help record registered successfully",
