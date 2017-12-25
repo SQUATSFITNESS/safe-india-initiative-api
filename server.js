@@ -53,13 +53,23 @@ app.get("/", function(req, res) {
   res.status(200).send("Welcoem to API endpoint of Safe India Initiative");
 });
 
-function sendMessageTo(nearbyUsers) {
+function sendMessageTo(nearbyUsers, helpSeeker) {
   nearbyUsers.forEach(function(user) {
     console.log("DATA", user);
     var fcm = user.fcm;
     if (fcm) {
       console.log("FCM: " + fcm);
-      admin.messaging().sendToDevice(fcm, { notification: { title: "Help needed", body: "Can you please help?"}})
+      admin.messaging().sendToDevice(fcm, {
+        notification: {
+          body: "Can you please help?",
+          title: "Help requested!!",
+          click_action: "squats.safeindiainitiative.OPEN_ACTIVITY_1"
+        },
+        data: {
+          lat: helpSeeker.lat.toString(),
+          long: helpSeeker.long.toString()
+        }
+      })
         .then(function(response) {
           // See the MessagingDevicesResponse reference documentation for
           // the contents of response.
@@ -117,7 +127,7 @@ app.post("/api/help", function(req, res) {
           handleError(res, err.message, "Failed to get current user location");
           return;
         } else {
-          sendMessageTo(nearbyUsers);
+          sendMessageTo(nearbyUsers, userDetails);
 
           res.status(200).json({
             success: true,
