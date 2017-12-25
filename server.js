@@ -7,6 +7,7 @@ var admin = require("firebase-admin");
 
 var HELP_NEEDED_COLLECTION = "helpNeeded";
 var USER_LOCATIONS_COLLECTION = "userLocations";
+var HELPER_COLLECTION = "helper";
 var NEARBY_RANGE_LAT_DIFF = 0.007;
 
 var app = express();
@@ -245,3 +246,64 @@ app.get("/api/user-location", function(req, res) {
       }
     });
 });
+
+
+/*  "/api/helpers"
+ *    POST: create a record of helper who wants to help
+ */
+app.post("/api/helpers", function(req, res) {
+  var helper = req.body;
+  console.log(helper.userId + " wants to help");
+  helper.datetime = new Date();
+  if (helper.userId === undefined) {
+    handleError(
+      res,
+      "User id unavailable",
+      "Please provide helper.userId"
+    );
+    return;
+  } else if (helper.lat === undefined || helper.long === undefined) {
+    handleError(
+      res,
+      "User location unavailable",
+      "Please provide helper.lat and helper.long"
+    );
+    return;
+  }
+
+  db
+    .collection(HELPER_COLLECTION)
+    .insert(helper, function(err, doc) {
+      if (err) {
+        handleError(res, err.message, "Failed to add helper info");
+        return;
+      } else {
+        res.status(200).json({
+          success: true,
+          message: "Help arriving soon",
+          helper: helper
+        });
+      }
+    });
+});
+
+
+/*  "/api/helpers"
+   *    GET: get list of users coming to help
+   */
+app.get("/api/helpers", function(req, res) {
+  var helpSeekerFcm = req.query.helpSeekerFcm;
+  db
+    .collection(HELPER_COLLECTION)
+    .find({helpSeekerFcm: helpSeekerFcm})
+    .toArray(function(err, helpers) {
+      if (err) {
+        handleError(res, err.message, "Failed to get helper list");
+        return;
+      } else {
+        res.status(200).json(helpers);
+      }
+    });
+});
+
+
