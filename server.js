@@ -68,7 +68,8 @@ function sendMessageTo(nearbyUsers, helpSeeker) {
         },
         data: {
           lat: helpSeeker.lat.toString(),
-          long: helpSeeker.long.toString()
+          long: helpSeeker.long.toString(),
+          helpSeekerFcm: helpSeeker.fcm
         }
       })
         .then(function(response) {
