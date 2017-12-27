@@ -295,14 +295,66 @@ app.post("/api/helpers", function(req, res) {
 app.get("/api/helpers", function(req, res) {
   var helpSeekerFcm = req.query.helpSeekerFcm;
   db
-    .collection(HELPER_COLLECTION)
-    .find({helpSeekerFcm: helpSeekerFcm})
-    .toArray(function(err, helpers) {
+    .collection(USER_LOCATIONS_COLLECTION)
+    .findOne({fcm: helpSeekerFcm}, function(err, helpSeeker) {
       if (err) {
-        handleError(res, err.message, "Failed to get helper list");
+        handleError(res, err.message, "Failed to get current user location");
         return;
       } else {
-        res.status(200).json(helpers);
+
+        db
+          .collection(HELPER_COLLECTION)
+          .find({helpSeekerFcm: helpSeekerFcm})
+          .toArray(function(err, helpers) {
+            if (err) {
+              handleError(res, err.message, "Failed to get helper list");
+              return;
+            } else {
+
+              var lat = helpSeeker.lat;
+              var long = helpSeeker.long;
+              var latMin = lat - NEARBY_RANGE_LAT_DIFF;
+              var latMax = lat + NEARBY_RANGE_LAT_DIFF;
+              var longMin = long - NEARBY_RANGE_LAT_DIFF;
+              var longMax = long + NEARBY_RANGE_LAT_DIFF;
+
+
+              console.log(latMin, latMax, longMin, longMax)
+
+
+              //again ask nearby users for help
+              db
+                .collection(USER_LOCATIONS_COLLECTION)
+                .find({lat: {$gte: latMin, $lte: latMax}, long: {$gte: longMin, $lte: longMax}, fcm: {$ne: helpSeekerFcm}}).toArray(function(err, nearbyUsers) {
+                if (err) {
+                  handleError(res, err.message, "Failed to get current user location");
+                  return;
+                } else {
+
+                  var newNearbyUsers = [];
+                  nearbyUsers.forEach(function(nearbyUser) {
+                    var alreadyHelping = false;
+                    helpers.forEach(function(helper) {
+                      if (nearbyUser.fcm === helper.fcm) {
+                        alreadyHelping = true;
+                      }
+                    });
+
+                    if (!alreadyHelping) {
+                      newNearbyUsers.push(nearbyUser);
+                    }
+                  });
+
+                  if (newNearbyUsers.length) {
+                    sendMessageTo(newNearbyUsers, helpSeeker);
+                    res.status(200).json(helpers);
+                  } else {
+                    res.status(200).json(helpers);
+                  }
+                }
+              });
+            }
+          });
       }
     });
 });
