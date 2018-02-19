@@ -51,7 +51,7 @@ function handleError(res, reason, message, code) {
 }
 
 app.get("/", function(req, res) {
-  res.status(200).send("Welcoem to API endpoint of Safe India Initiative");
+  res.status(200).send("Welcome to API endpoint of Safe India Initiative");
 });
 
 function sendMessageTo(nearbyUsers, helpSeeker) {
@@ -138,8 +138,6 @@ app.post("/api/help", function(req, res) {
           });
         }
       });
-
-
     }
   });
 });
@@ -304,7 +302,7 @@ app.get("/api/helpers", function(req, res) {
 
         db
           .collection(HELPER_COLLECTION)
-          .find({helpSeekerFcm: helpSeekerFcm})
+          .find({helpSeekerFcm: helpSeekerFcm, lat: {$ne: 0}, long: {$ne: 0}})
           .toArray(function(err, helpers) {
             if (err) {
               handleError(res, err.message, "Failed to get helper list");
