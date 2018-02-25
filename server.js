@@ -64,7 +64,7 @@ function sendMessageTo(nearbyUsers, helpSeeker) {
         notification: {
           body: "Can you please help?",
           title: "Help requested!!",
-          click_action: "squats.safeindiainitiative.OPEN_ACTIVITY_1"
+          click_action: "in.squats.safeindiainitiative.actions.NOTIFY_USER"
         },
         data: {
           lat: helpSeeker.lat.toString(),
