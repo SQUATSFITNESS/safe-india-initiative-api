@@ -67,7 +67,7 @@ function sendMessageToNearbyUsersForHelp(nearbyUsers, helpSeeker) {
           click_action: "in.squats.safeindiainitiative.actions.NOTIFY_USER"
         },
         data: {
-		  type: "NOTIFY_USER",
+		  action: "NOTIFY_USER",
           lat: helpSeeker.lat.toString(),
           long: helpSeeker.long.toString(),
           helpSeekerFcm: helpSeeker.fcm
@@ -89,13 +89,8 @@ function sendMessageToVictimAboutHelpers(helper, helpSeekerFcm) {
 	if (helpSeekerFcm) {
 	  console.log("Victim FCM: " + helpSeekerFcm);
 	  admin.messaging().sendToDevice(helpSeekerFcm, {
-		notification: {
-		  body: "People are coming for your help",
-		  title: "Help arriving soon",
-		  click_action: "in.squats.safeindiainitiative.actions.NOTIFY_VICTIM"
-		},
 		data: {
-		  type: "NOTIFY_VICTIM",
+		  action: "NOTIFY_VICTIM",
 		  lat: helper.lat.toString(),
 		  long: helper.long.toString()
 		}
