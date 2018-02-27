@@ -54,7 +54,7 @@ app.get("/", function(req, res) {
   res.status(200).send("Welcome to API endpoint of Safe India Initiative");
 });
 
-function sendMessageTo(nearbyUsers, helpSeeker) {
+function sendMessageToNearbyUsersForHelp(nearbyUsers, helpSeeker) {
   nearbyUsers.forEach(function(user) {
     console.log("DATA", user);
     var fcm = user.fcm;
@@ -82,6 +82,31 @@ function sendMessageTo(nearbyUsers, helpSeeker) {
         });
     }
   });
+}
+
+function sendMessageToVictimAboutHelpers(helper, helpSeekerFcm) {
+	if (helpSeekerFcm) {
+	  console.log("Victim FCM: " + helpSeekerFcm);
+	  admin.messaging().sendToDevice(helpSeekerFcm, {
+		notification: {
+		  body: "People are coming for your help",
+		  title: "Help arriving soon",
+		  click_action: "in.squats.safeindiainitiative.actions.NOTIFY_VICTIM"
+		},
+		data: {
+		  lat: helper.lat.toString(),
+		  long: helper.long.toString()
+		}
+	  })
+		.then(function(response) {
+		  // See the MessagingDevicesResponse reference documentation for
+		  // the contents of response.
+		  console.log("Successfully sent message:", response);
+		})
+		.catch(function(error) {
+		  console.log("Error sending message:", error);
+		});
+	}
 }
 
 /*  "/api/help"
@@ -129,7 +154,7 @@ app.post("/api/help", function(req, res) {
           handleError(res, err.message, "Failed to get current user location");
           return;
         } else {
-          sendMessageTo(nearbyUsers, userDetails);
+          sendMessageToNearbyUsersForHelp(nearbyUsers, userDetails);
 
           res.status(200).json({
             success: true,
@@ -277,6 +302,7 @@ app.post("/api/helpers", function(req, res) {
         handleError(res, err.message, "Failed to add helper info");
         return;
       } else {
+		  sendMessageToVictimAboutHelpers(helper, helper.helpSeekerFcm)
         res.status(200).json({
           success: true,
           message: "We have messaged the help seeker that you are arriving to help",
@@ -344,7 +370,7 @@ app.get("/api/helpers", function(req, res) {
                   });
 
                   if (newNearbyUsers.length) {
-                    sendMessageTo(newNearbyUsers, helpSeeker);
+                    sendMessageToNearbyUsersForHelp(newNearbyUsers, helpSeeker);
                     res.status(200).json(helpers);
                   } else {
                     res.status(200).json(helpers);
