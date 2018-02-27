@@ -67,6 +67,7 @@ function sendMessageToNearbyUsersForHelp(nearbyUsers, helpSeeker) {
           click_action: "in.squats.safeindiainitiative.actions.NOTIFY_USER"
         },
         data: {
+		  type: "NOTIFY_USER",
           lat: helpSeeker.lat.toString(),
           long: helpSeeker.long.toString(),
           helpSeekerFcm: helpSeeker.fcm
@@ -94,6 +95,7 @@ function sendMessageToVictimAboutHelpers(helper, helpSeekerFcm) {
 		  click_action: "in.squats.safeindiainitiative.actions.NOTIFY_VICTIM"
 		},
 		data: {
+		  type: "NOTIFY_VICTIM",
 		  lat: helper.lat.toString(),
 		  long: helper.long.toString()
 		}
