@@ -25,7 +25,7 @@ admin.initializeApp({
 
 
 // Connect to the database before starting the application server.
-mongodb.MongoClient.connect('mongodb://heroku_p17n4dzm:nvph11j7v39q5nojju02spdm9p@ds133496.mlab.com:33496/heroku_p17n4dzm', function(err, database) {
+mongodb.MongoClient.connect(process.env.MONGODB_URI, function(err, database) {
   if (err) {
     console.log(err);
     process.exit(1);
@@ -61,11 +61,14 @@ function sendMessageToNearbyUsersForHelp(nearbyUsers, helpSeeker) {
     var fcm = user.fcm;
     if (fcm) {
       console.log("FCM: " + fcm);
+	  var strLat = "\"" + helpSeeker.lat.toString() + "\"";
+	  var strLng = "\"" + helpSeeker.long.toString() + "\"";
+	  
       admin.messaging().sendToDevice(fcm, {
         data: {
 		  action: "NOTIFY_USER",
-          lat: helpSeeker.lat.toString(),
-          long: helpSeeker.long.toString(),
+          lat: strLat,
+          long: strLng,
           helpSeekerFcm: helpSeeker.fcm
         }
       })
@@ -86,11 +89,13 @@ function sendMessageToVictimAboutHelpers(helper, helpSeekerFcm) {
 	  console.log("Victim FCM: " + helpSeekerFcm);
 	  console.log("Helper: ", helper);
 	  
+	  var strLat = "\"" + helper.lat.toString() + "\"";
+	  var strLng = "\"" + helper.long.toString() + "\"";
 	  admin.messaging().sendToDevice(helpSeekerFcm, {
 		data: {
 		  action: "NOTIFY_VICTIM",
-		  lat: helper.lat.toString(),
-		  long: helper.long.toString()
+		  lat: strLat,
+		  long: strLng
 		}
 	  })
 		.then(function(response) {
