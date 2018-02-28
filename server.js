@@ -83,6 +83,8 @@ function sendMessageToNearbyUsersForHelp(nearbyUsers, helpSeeker) {
 function sendMessageToVictimAboutHelpers(helper, helpSeekerFcm) {
 	if (helpSeekerFcm) {
 	  console.log("Victim FCM: " + helpSeekerFcm);
+	  console.log("Helper: ", helper);
+	  
 	  admin.messaging().sendToDevice(helpSeekerFcm, {
 		data: {
 		  action: "NOTIFY_VICTIM",
