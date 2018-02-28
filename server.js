@@ -25,7 +25,7 @@ admin.initializeApp({
 
 
 // Connect to the database before starting the application server.
-mongodb.MongoClient.connect(process.env.MONGODB_URI, function(err, database) {
+mongodb.MongoClient.connect('mongodb://heroku_p17n4dzm:nvph11j7v39q5nojju02spdm9p@ds133496.mlab.com:33496/heroku_p17n4dzm', function(err, database) {
   if (err) {
     console.log(err);
     process.exit(1);
@@ -36,7 +36,7 @@ mongodb.MongoClient.connect(process.env.MONGODB_URI, function(err, database) {
   console.log("Database connection ready");
 
   // Initialize the app.
-  var server = app.listen(process.env.PORT || 3029, function() {
+  var server = app.listen(process.env.PORT || 3046, function() {
     var port = server.address().port;
     console.log("App now running on port", port);
   });
@@ -57,6 +57,7 @@ app.get("/", function(req, res) {
 function sendMessageToNearbyUsersForHelp(nearbyUsers, helpSeeker) {
   nearbyUsers.forEach(function(user) {
     console.log("DATA", user);
+	console.log("Sending notifications to nearby users. Helpseeker: ", helpSeeker);
     var fcm = user.fcm;
     if (fcm) {
       console.log("FCM: " + fcm);
