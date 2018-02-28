@@ -61,11 +61,6 @@ function sendMessageToNearbyUsersForHelp(nearbyUsers, helpSeeker) {
     if (fcm) {
       console.log("FCM: " + fcm);
       admin.messaging().sendToDevice(fcm, {
-        notification: {
-          body: "Can you please help?",
-          title: "Help requested!!",
-          click_action: "in.squats.safeindiainitiative.actions.NOTIFY_USER"
-        },
         data: {
 		  action: "NOTIFY_USER",
           lat: helpSeeker.lat.toString(),
