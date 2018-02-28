@@ -61,8 +61,8 @@ function sendMessageToNearbyUsersForHelp(nearbyUsers, helpSeeker) {
     var fcm = user.fcm;
     if (fcm) {
       console.log("FCM: " + fcm);
-	  var strLat = "\"" + helpSeeker.lat.toString() + "\"";
-	  var strLng = "\"" + helpSeeker.long.toString() + "\"";
+	  var strLat = helpSeeker.lat.toString();
+	  var strLng = helpSeeker.long.toString();
 	  
       admin.messaging().sendToDevice(fcm, {
         data: {
@@ -89,8 +89,8 @@ function sendMessageToVictimAboutHelpers(helper, helpSeekerFcm) {
 	  console.log("Victim FCM: " + helpSeekerFcm);
 	  console.log("Helper: ", helper);
 	  
-	  var strLat = "\"" + helper.lat.toString() + "\"";
-	  var strLng = "\"" + helper.long.toString() + "\"";
+	  var strLat = helper.lat.toString();
+	  var strLng = helper.long.toString();
 	  admin.messaging().sendToDevice(helpSeekerFcm, {
 		data: {
 		  action: "NOTIFY_VICTIM",
